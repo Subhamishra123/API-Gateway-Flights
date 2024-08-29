@@ -1,6 +1,9 @@
 const { SuccessResponse,ErrorResponse } = require('../utils/commons');
 const { httpStatusCode } = require('httpstatuscode')
 const AppError = require('../utils/errors/AppError')
+
+const { UserService } = require('../services');
+const { error } = require('../utils/commons/success-response');
 function validateAuthRequest(request,response,next)
 {
     if(!request.body.email)
@@ -18,7 +21,28 @@ function validateAuthRequest(request,response,next)
 
     next();
 }
+async function authCheck(request,response,next) {
+   try {
+    const responseData = await UserService.isAuthenticated(request.headers['x-auth-token']);
+    
+    if(responseData)
+    {
+        request.userId=responseData;
+        next();
+    }
+   
 
+   } catch (error) {
+   
+    if(error instanceof AppError)
+    {
+        
+        return response.status(error.statusCode).json(error);
+    }
+    return response.status(error.statusCode).json(error);
+   }
+}
 module.exports={
-    validateAuthRequest
+    validateAuthRequest,
+    authCheck
 }

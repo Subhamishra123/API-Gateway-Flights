@@ -19,7 +19,7 @@ async function createUser(userData)
         await transaction.rollback();
         
         let explanation = [];
-        console.log(error.name)
+        
         if(error.name === 'SequelizeUniqueConstraintError' || error.name==='SequelizeValidationError');
         {
             error.errors.forEach(e=>{
@@ -55,9 +55,39 @@ async function signIn(data)
     }
 }
 
-
+async function isAuthenticated(token)
+{
+    try {
+        if(!token)
+        {
+           
+            throw new AppError('JWT token Missing',httpStatusCode.BadRequest);
+        }
+        const response = auth.verifyToken(token);
+       
+        const user = await userRepo.get(response.id);
+        if(!user)
+        {
+            throw new AppError('No such user found',httpStatusCode.NotFound);
+        }
+        return user.id;
+    } catch (error) {
+        if(error instanceof AppError)
+            throw error;
+        if (error.name==='TokenExpiredError')
+        {
+            throw new AppError('Token expired please sign in again',httpStatusCode.BadRequest);
+        }
+        if(error.name === 'JsonWebTokenError')
+        {
+            throw new AppError('Invalid JWT token',httpStatusCode.BadRequest);
+        }
+        throw error;
+    }
+}
 
 module.exports={
     createUser,
-    signIn
+    signIn,
+    isAuthenticated
 }

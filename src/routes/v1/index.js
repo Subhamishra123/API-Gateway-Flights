@@ -4,7 +4,9 @@ const { InfoController } = require('../../controllers');
 const { userRouter } = require('./user-routes')
 const router = express.Router();
 
-router.get('/info', InfoController.info);
+const { AuthMiddleware } = require('../../middlewares')
+
+router.get('/info',AuthMiddleware.authCheck, InfoController.info);
 
 router.use('/users',userRouter)
 
