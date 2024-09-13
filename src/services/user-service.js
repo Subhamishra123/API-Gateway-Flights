@@ -1,19 +1,25 @@
-const { UserRepoitory } = require('../repositories');
+const { UserRepoitory,RoleRepository } = require('../repositories');
 
 const { auth } = require('../utils/commons')
 const logger = require('../config/logger-config');
 const AppError = require('../utils/errors/AppError');
 const { httpStatusCode } = require('httpstatuscode');
+const { Role,Users } = require('../models');
+const { ENUMS } = require('../utils/commons')
+
 const userRepo=new UserRepoitory();
+const roleRepo=new RoleRepository();
 const  db  = require('../models')
 async function createUser(userData)
 {
     const transaction = await db.sequelize.transaction();
     try {
         
-        const response = await userRepo.create(userData,transaction);
+        const user = await userRepo.create(userData,transaction);
+        const role = await roleRepo.getRoleByName(ENUMS.USER_ROLES_ENUMS.ADMIN);
+        user.addRole(role);
         await transaction.commit();
-        return response;
+        return user;
     } catch (error) {
        
         await transaction.rollback();
