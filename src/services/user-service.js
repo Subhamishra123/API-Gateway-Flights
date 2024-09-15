@@ -16,7 +16,7 @@ async function createUser(userData)
     try {
         
         const user = await userRepo.create(userData,transaction);
-        const role = await roleRepo.getRoleByName(ENUMS.USER_ROLES_ENUMS.ADMIN);
+        const role = await roleRepo.getRoleByName(ENUMS.USER_ROLES_ENUMS.CUSTOMER);
         user.addRole(role);
         await transaction.commit();
         return user;
@@ -92,8 +92,48 @@ async function isAuthenticated(token)
     }
 }
 
+async function addRoleToUser(data)
+{
+    try {
+        const user = await userRepo.get(data.id);
+        if(!user)
+        {
+            throw new AppError('No such user found',httpStatusCode.NotFound);
+        }
+
+        const role = await roleRepo.getRoleByName(data.role);
+        if(!role)
+        {
+            throw new AppError('No role found',httpStatusCode.NotFound);
+        }
+        user.addRole(role);
+    } catch (error) {
+        if(error instanceof AppError)
+            throw error;
+        throw new AppError('Something went wrong',httpStatusCode.InternalServerError);
+    }
+}
+
+async function checkIsAdmin(id) {
+    try {
+        const user = await userRepo.get(id);
+        if(!user)
+        {
+            throw new AppError('No such user found',httpStatusCode.NotFound);
+        }
+       const role = await roleRepo.getRoleByName(ENUMS.USER_ROLES_ENUMS.ADMIN);
+        return user.hasRole(role);
+    } catch (error) {
+        if (error instanceof AppError)
+            throw error;
+        throw new AppError('Something went wrong',httpStatusCode.InternalServerError);
+    }
+}
+
 module.exports={
     createUser,
     signIn,
-    isAuthenticated
+    isAuthenticated,
+    addRoleToUser,
+    checkIsAdmin
 }

@@ -42,7 +42,28 @@ async function authCheck(request,response,next) {
     return response.status(error.statusCode).json(error);
    }
 }
+
+async function isAdmin(request,response,next) {
+    try {
+        const responseData = await UserService.checkIsAdmin(request.userId);
+        
+        if(!responseData)
+        {
+            return response.status(httpStatusCode.Unauthorized).json({message:"user not authorized for this action"});
+        }
+        console.log(responseData);
+        next();
+    } catch (error) {
+        if(error instanceof AppError)
+        {
+                
+            return response.status(error.statusCode).json(error);
+        }
+        return response.status(error.statusCode).json(error);
+    }
+}
 module.exports={
     validateAuthRequest,
-    authCheck
+    authCheck,
+    isAdmin
 }

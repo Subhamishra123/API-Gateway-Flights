@@ -17,11 +17,29 @@ const limiter = rateLimit({
 
 app.use(limiter);
 
-app.use('/flightsService',createProxyMiddleware({
-    target:ServerConfig.FLIGHTS_SERVICE,
-    changeOrigin:true,
-    pathRewrite:{'^/flightsService':'/'}
+// app.use('/flightsService',createProxyMiddleware({
+//     target:ServerConfig.FLIGHTS_SERVICE,
+//     changeOrigin:true,
+//     pathRewrite:{'^/flightsService':'/'}
+// }));
+
+
+app.use('/flightsService', (req, res, next) => {
+    console.log(`Proxying ${req.method} request to ${ServerConfig.FLIGHTS_SERVICE}`);
+    next();
+}, createProxyMiddleware({
+    target: ServerConfig.FLIGHTS_SERVICE,
+    changeOrigin: true,
+    pathRewrite: { '^/flightsService': '/api/v1' },
+    onProxyReq: (proxyReq, req, res) => {
+        console.log('Request headers:', req.headers);
+    },
+    onProxyRes: (proxyRes, req, res) => {
+        console.log('Response status:', proxyRes.statusCode);
+    }
 }));
+
+
 
 app.use('/bookingsService',createProxyMiddleware({
     target:ServerConfig.BOOKINGS_SERVICE,
